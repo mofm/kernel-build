@@ -36,3 +36,7 @@ Now you execute the script like so
  ```sh
  ./build-kernel.sh grub2
  ```
+
+ ````
+ *NOTE*: This script only cleans the previous kernel.
+ ````
