@@ -5,7 +5,7 @@
 # Note: if using LVM, this should be the LVM partition.
 UUID=""
 
-#Optinal
+#Optional
 # Any rootflags you wish to set. For example, mine are currently
 # "subvol=@ quiet splash intel_pstate=enable".
 ROOTFLAGS=""
@@ -17,9 +17,9 @@ build_initramfs() {
 	vendor=$(cat /proc/cpuinfo | grep -m 1 vendor_id | awk '{ printf "%s\n", $3 }')
 	if [ $vendor -eq "GenuineIntel" ]; then
 		is_installed "sys-firmware/intel-microcode"
-		genkernel --install --no-ramdisk-modules --microcode initramfs
+		genkernel --install --no-ramdisk-modules --lvm --microcode initramfs
 	else
-		genkernel --install --no-ramdisk-modules initramfs
+		genkernel --install --no-ramdisk-modules --lvm initramfs
 	fi
 }
 
@@ -67,11 +67,11 @@ compile_kernel() {
 	source /etc/portage/make.conf
 	printf "\n"
 	printf "Compiling bzImage\n"
-	make KCFLAGS="$CFLAGS" -j ARCH=x86_64 "$MAKEOPTS" bzImage
+	make KCFLAGS="$CFLAGS" ARCH=$(uname -m) -j "$MAKEOPTS" bzImage
 	if [ $? -eq 0 ]; then
 		printf "\n"
 		printf "Compiling modules\n"
-		make KCFLAGS="$CFLAGS" -j ARCH=x86_64 "$MAKEOPTS" modules
+		make KCFLAGS="$CFLAGS" ARCH=$(uname -m) -j "$MAKEOPTS" modules
 		printf "\n"
 		printf "compiling finished. installing kernel and modules\n"
 		make INSTALL_MOD_STRIP=1 modules_install
@@ -135,7 +135,7 @@ update_systemd() {
 	# keep using the same loader configuration.
 	LATEST="${KERNELS[@]:0:1}"
 	echo -e "\e[2msystemd-boot\e[0m \e[1;32m${LATEST}\e[0m"
-	cat << EOF > /boot/loader/entries/gentoox.conf
+	cat << EOF > /boot/loader/entries/gentoo.conf
 	title   Gentoo Linux
 	linux   /vmlinuz-${LATEST}
 	initrd  /initramfs-${LATEST}.img
