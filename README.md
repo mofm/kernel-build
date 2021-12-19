@@ -1,6 +1,6 @@
 # Kernel Build
 
-Kernel configuration copying, compile, grub2 and systemd-boot updating, old kernel cleaning script for Gentoo Linux
+Kernel configuration copying, compile, grub2 and systemd-boot updating, old kernel cleaning script for Gentoo Linux.
 
 ## Usage
 
@@ -18,6 +18,7 @@ chmod +x build-kernel.sh
 ```
 
 * If you are using **systemd-boot** you should first learn rootfs disk **UUID** or **LVM** partitions and then add it to the script:
+
 Optional: *You can add specific kernel parameters to ROOTFLAGS.*
 
 ```sh
@@ -30,7 +31,7 @@ Now you execute the script like so
  ./build-kernel.sh systemd-boot
  ```
 
- * if you are using **grub2**:
+ * If you are using **grub2**:
  
  ```sh
  ./build-kernel.sh grub2
