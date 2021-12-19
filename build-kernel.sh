@@ -188,10 +188,15 @@ banner() {
 
 banner
 
+# check root privileges and
 # do nothing if both versions are the same
 new_kernel_ver=$(readlink /usr/src/linux | sed 's/^linux-//');
 current_kernel_ver=$(uname -r | sed 's/-x86_64$//');
-if [ ${new_kernel_ver} == ${current_kernel_ver} ]; then
+if [ "$EUID" -ne 0 ]; then
+	printf "\n"
+	printf "Warning: Please run this script as root privileges. \n"
+	exit 1
+elif [ ${new_kernel_ver} == ${current_kernel_ver} ]; then
 	printf "\n"
 	printf "Warning: eselect kernel was unset, please set it. \n"
 	exit 1
@@ -204,11 +209,15 @@ if [ $1 -eq "systemd-boot" ]; then
 	else
 		compile_kernel
 		build_initramfs
+		#rebuild modules
+		emerge -1 @module-rebuild
 		update_systemd
 	fi
 if [ $1 -eq "grub2" ]; then
 	compile_kernel
 	build_initramfs
+	#rebuild modules
+	emerge -1 @module-rebuild
 	update_grub
 else
 	printf "Error: Please select loader: systemd-boot or grub2 \n"
