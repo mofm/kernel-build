@@ -15,7 +15,7 @@ build_initramfs() {
 	printf "Starting to building initramfs..please wait...\n"
 	is_installed "sys-kernel/genkernel"
 	vendor=$(cat /proc/cpuinfo | grep -m 1 vendor_id | awk '{ printf "%s\n", $3 }')
-	if [ $vendor -eq "GenuineIntel" ]; then
+	if [ $vendor == "GenuineIntel" ]; then
 		is_installed "sys-firmware/intel-microcode"
 		genkernel --install --no-ramdisk-modules --lvm --microcode initramfs
 	else
@@ -53,25 +53,25 @@ compile_kernel() {
 	fi
 	zcat /proc/config.gz > /usr/src/linux/.config
 	if [ $? -gt 0 ]; then
-		printf "Error: failed to copy /proc/config.gz to /usr/src/linux/.config - try another method. \n"
+		CONFIG=$(find /boot -maxdepth 1 -name 'config-*' -type f -not -name '*.old' -print0 | xargs -r -0 ls -t | tail -1)
+		cp ${CONFIG} /usr/src/linux/.config
 	else
-		FIND="find /boot -maxdepth 1 -name 'config-*' -type f -not -name '*.old' -print0 | sort -Vrz"
-		while IFS= read -r -u3 -d $'\0' LINE; do
-			CONFIG=$(basename "${LINE}")
-			CONFIGS=("${CONFIG:8}")
-		done 3< <(eval "${FIND}")
-		cp /boot/${CONFIGS[@]:0:1} /usr/src/linux/.config
+		printf "Error: failed to copy kernel config file to /usr/src/linux/.config - try another method. \n"
+		exit 1
 	fi
 	printf "\n"
 	printf "Starting to build kernel.. please wait... \n"
 	source /etc/portage/make.conf
 	printf "\n"
+        printf "Configure Kernel\n"
+        make olddefconfig
+	printf "\n"
 	printf "Compiling bzImage\n"
-	make KCFLAGS="$CFLAGS" ARCH=$(uname -m) -j "$MAKEOPTS" bzImage
+	make ARCH=$(uname -m) ${MAKEOPTS} bzImage
 	if [ $? -eq 0 ]; then
 		printf "\n"
 		printf "Compiling modules\n"
-		make KCFLAGS="$CFLAGS" ARCH=$(uname -m) -j "$MAKEOPTS" modules
+		make ARCH=$(uname -m) ${MAKEOPTS} modules
 		printf "\n"
 		printf "compiling finished. installing kernel and modules\n"
 		make INSTALL_MOD_STRIP=1 modules_install
@@ -136,10 +136,10 @@ update_systemd() {
 	LATEST="${KERNELS[@]:0:1}"
 	echo -e "\e[2msystemd-boot\e[0m \e[1;32m${LATEST}\e[0m"
 	cat << EOF > /boot/loader/entries/gentoo.conf
-	title   Gentoo Linux
-	linux   /vmlinuz-${LATEST}
-	initrd  /initramfs-${LATEST}.img
-	options root=UUID=${UUID} rw ${ROOTFLAGS}
+title   Gentoo Linux
+linux   /vmlinuz-${LATEST}
+initrd  /initramfs-${LATEST}.img
+options root=UUID=${UUID} rw ${ROOTFLAGS}
 EOF
 
 	# Copy any legacy kernels over too, but maintain their version-
@@ -149,10 +149,10 @@ EOF
 		for VERSION in "${LEGACY[@]}"; do
 		    echo -e "\e[2msystemd-boot\e[0m \e[1;32m${VERSION}\e[0m"
 		    cat << EOF > /boot/loader/entries/gentoo-${VERSION}.conf
-	title   Gentoo Linux ${VERSION}
-	linux   /vmlinuz-${VERSION}
-	initrd  /initramfs-${VERSION}.img
-	options root=UUID=${UUID} rw ${ROOTFLAGS}
+title   Gentoo Linux ${VERSION}
+linux   /vmlinuz-${VERSION}
+initrd  /initramfs-${VERSION}.img
+options root=UUID=${UUID} rw ${ROOTFLAGS}
 EOF
 		done
 	fi
@@ -202,7 +202,7 @@ elif [ ${new_kernel_ver} == ${current_kernel_ver} ]; then
 	exit 1
 fi
 
-if [ $1 -eq "systemd-boot" ]; then
+if [ $1 == "systemd-boot" ]; then
 	if [ -z "$UUID" ]; then
 		printf "Error: Please add rootfs UUID. aborted. \n"
 		exit 1
@@ -213,7 +213,7 @@ if [ $1 -eq "systemd-boot" ]; then
 		emerge -1 @module-rebuild
 		update_systemd
 	fi
-if [ $1 -eq "grub2" ]; then
+elif [ $1 == "grub2" ]; then
 	compile_kernel
 	build_initramfs
 	#rebuild modules
