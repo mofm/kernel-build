@@ -202,18 +202,20 @@ elif [ ${new_kernel_ver} == ${current_kernel_ver} ]; then
 	exit 1
 fi
 
-if [ $1 == "systemd-boot" ]; then
+if [ "$1" == "systemd-boot" ]; then
 	if [ -z "$UUID" ]; then
 		printf "Error: Please add rootfs UUID. aborted. \n"
 		exit 1
 	else
+		set -e
 		compile_kernel
 		build_initramfs
 		#rebuild modules
 		emerge -1 @module-rebuild
 		update_systemd
 	fi
-elif [ $1 == "grub2" ]; then
+elif [ "$1" == "grub2" ]; then
+	set -e
 	compile_kernel
 	build_initramfs
 	#rebuild modules
