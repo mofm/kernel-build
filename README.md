@@ -29,4 +29,3 @@ Usage: ./build-kernel.sh: [-h] [-c] [-i] [-l] [-s] [-r] [-a]
 ```
 
 NOTE: I have rewritten the script. If you are using the old version, you should update it.
-changed and rewritten whole
