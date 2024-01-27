@@ -258,12 +258,17 @@ update_boot_system() {
     ewarn "Boot partition is not mounted or separate boot partition not found"
   fi
   # check if systemd-boot is installed
-  if [ -d "/boot/loader" ]; then
+  if [[ "$(bootctl is-installed)" == "yes" ]]; then
+    einfo "Systemd-boot detected"
     update_systemd_boot
-  elif [ -d "/boot/grub" ]; then
+  # check if grub is installed, check if /boot/grub/grub.cfg exists
+  # and check grub-mkconfig is installed (basic check)
+  # I dont check if grub is installed in MBR or EFI :(
+  elif [ -f "/boot/grub/grub.cfg" ] && [ -x "/usr/sbin/grub-mkconfig" ]; then
+    einfo "Grub detected"
     update_grub
   else
-    die "Boot system not found"
+    die "Boot system not detected"
   fi
 }
 
