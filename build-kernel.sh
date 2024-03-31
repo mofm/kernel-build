@@ -170,6 +170,8 @@ install_kernel() {
   links=$(readlink -f /usr/src/linux)
   version=$(basename "$links" | sed 's/linux-//')
   cp -v arch/"$(uname -m)"/boot/bzImage /boot/vmlinuz-"$version" || die "Failed to copy kernel image"
+  # emerge @module-rebuild to rebuild modules, if needed. quiet mode
+  emerge -q @module-rebuild || die "Failed to rebuild modules"
   printf "\n"
   einfo "Kernel and modules installed successfully."
   popd_quiet "$KERNEL_DIR"
