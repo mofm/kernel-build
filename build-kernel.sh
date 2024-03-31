@@ -162,7 +162,14 @@ install_kernel() {
   einfo "Installing kernel and modules..."
   pushd_quiet "$KERNEL_DIR"
   make -s INSTALL_MOD_STRIP=1 modules_install || die "Failed to install kernel modules"
-  make -s install || die "Failed to install kernel"
+  # note: removeing sys-kernel/installkernel package from your system WILL change the way
+  # kernels are installed by "make install"! Instead of the versioned
+  # /boot/vmlinuz-x.y.z that you are used to, "make install" will simply
+  # copy bzImage. So we will need to manually copy the kernel image.
+  # we will use "/usr/src/linux" symlink to get the kernel version
+  links=$(readlink -f /usr/src/linux)
+  version=$(basename "$links" | sed 's/linux-//')
+  cp -v arch/"$(uname -m)"/boot/bzImage /boot/vmlinuz-"$version" || die "Failed to copy kernel image"
   printf "\n"
   einfo "Kernel and modules installed successfully."
   popd_quiet "$KERNEL_DIR"
