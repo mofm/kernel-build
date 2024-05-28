@@ -170,6 +170,9 @@ install_kernel() {
   links=$(readlink -f /usr/src/linux)
   version=$(basename "$links" | sed 's/linux-//')
   cp -v arch/"$(uname -m)"/boot/bzImage /boot/vmlinuz-"$version" || die "Failed to copy kernel image"
+  # copy System.map and config
+  cp -v System.map /boot/System.map-"$version" || die "Failed to copy System.map"
+  cp -v .config /boot/config-"$version" || die "Failed to copy config"
   # emerge @module-rebuild to rebuild modules, if needed. quiet mode
   emerge -q @module-rebuild || die "Failed to rebuild modules"
   printf "\n"
